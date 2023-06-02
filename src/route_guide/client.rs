@@ -1,11 +1,13 @@
-pub mod routeguide {
-    tonic::include_proto!("routeguide");
-}
+// pub mod routeguide {
+        // 指定 proto 生成的文件的包名
+//     tonic::include_proto!("routeguide");
+// }
+
 use futures_util::stream;
 use rand::rngs::ThreadRng;
 use rand::Rng;
-use routeguide::route_guide_client::RouteGuideClient;
-use routeguide::{Point, Rectangle, RouteNote};
+use route_guide::route_guide_client::RouteGuideClient;
+use route_guide::{Point, Rectangle, RouteNote};
 use std::error::Error;
 use std::ops::Range;
 use std::time::Duration;
@@ -13,9 +15,11 @@ use tokio::time;
 use tonic::transport::Channel;
 use tonic::Request;
 
+mod route_guide;
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut client = RouteGuideClient::connect("http://[::1]:10000").await?;
+    let mut client = RouteGuideClient::connect("http://127.0.0.1:10000").await?;
     let response = client
         .get_feature(Request::new(Point {
             latitude: 409146138,
@@ -24,8 +28,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .await?;
     // println!("RESPONSE = {:?}", response);
     // print_features(&mut client).await?;
-    // run_record_route(&mut client).await?;
-    run_route_chat(&mut client).await?;
+    run_record_route(&mut client).await?;
+    // run_route_chat(&mut client).await?;
     Ok(())
 }
 
@@ -55,7 +59,7 @@ async fn print_features(client: &mut RouteGuideClient<Channel>) -> Result<(), Bo
 
 async fn run_record_route(client: &mut RouteGuideClient<Channel>) -> Result<(), Box<dyn Error>> {
     let mut rng = rand::thread_rng();
-    let point_count: i32 = rng.gen_range(2,100);
+    let point_count: i32 = rng.gen_range(2..100);
 
     let mut points = vec![];
     for _ in 0..=point_count {
@@ -74,8 +78,8 @@ async fn run_record_route(client: &mut RouteGuideClient<Channel>) -> Result<(), 
 }
 
 fn random_point(rng: &mut ThreadRng) -> Point {
-    let latitude = (rng.gen_range(0,180) - 90) * 10_000_000;
-    let longitude = (rng.gen_range(0,360) - 180) * 10_000_000;
+    let latitude = (rng.gen_range(0..180) - 90) * 10_000_000;
+    let longitude = (rng.gen_range(0..360) - 180) * 10_000_000;
     Point {
         latitude,
         longitude,

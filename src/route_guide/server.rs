@@ -1,29 +1,33 @@
-use crate::route_guide::route_guide_server::RouteGuideServer;
-use crate::route_guide::{Feature, Point, Rectangle, RouteNote, RouteSummary};
-use futures_core::Stream;
-use futures_util::StreamExt;
-use route_guide::route_guide_server::RouteGuide;
-use serde_json::value::Serializer;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::pin::Pin;
 use std::sync::Arc;
+
+use futures_core::Stream;
+use futures_util::StreamExt;
+use serde_json::value::Serializer;
 use tokio::sync::mpsc;
 use tokio::time::Instant;
 use tokio_stream::wrappers::ReceiverStream;
-use tonic::transport::Server;
 use tonic::{Request, Response, Status, Streaming};
+use tonic::transport::Server;
+
+use route_guide::{Feature, Point, Rectangle, RouteNote, RouteSummary};
+use route_guide::route_guide_server::RouteGuide;
+use route_guide::route_guide_server::RouteGuideServer;
 
 mod data;
+mod route_guide;
 
 #[derive(Debug)]
 pub struct RouteGuideService {
     features: Arc<Vec<Feature>>,
 }
 
-pub mod route_guide {
-    tonic::include_proto!("routeguide");
-}
+// pub mod route_guide {
+// 当自定义了生成代码的位置后，可以直接导入生成的代码，不需要再指定包名
+//     tonic::include_proto!("routeguide");
+// }
 
 #[tonic::async_trait]
 impl RouteGuide for RouteGuideService {
@@ -80,7 +84,7 @@ impl RouteGuide for RouteGuideService {
         Ok(Response::new(summary))
     }
 
-    type RouteChatStream = Pin<Box<dyn Stream<Item = Result<RouteNote, Status>> + Send + 'static>>;
+    type RouteChatStream = Pin<Box<dyn Stream<Item=Result<RouteNote, Status>> + Send + 'static>>;
 
     async fn route_chat(
         &self,
@@ -117,7 +121,7 @@ impl Eq for Point {}
 
 #[tokio::main]
 async fn main() {
-    let addr = "[::1]:10000".parse().unwrap();
+    let addr = "127.0.0.1:10000".parse().unwrap();
     let route_guide_service = RouteGuideService {
         features: Arc::new(data::load()),
     };
